@@ -7,10 +7,22 @@ class BackTester:
                  starting_balance: int, stake_amount: int,
                  stop_loss: Optional[int], take_profit: Optional[int]):
         self.dataframe = df
-        self.starting_balance = starting_balance
+        self.balance = starting_balance
         self.stake_amount = stake_amount
         self.stop_loss = stop_loss
         self.take_profit = take_profit
+        self.trades = []
+        self.wins = []
+        self.losses = []
+        self.total_trades = 0
+
+    def _enter_long(self, row: pd.Series):
+        if self.balance >= self.stake_amount:
+            current_price = row["close"]
+            amount_to_buy = self.stake_amount / current_price
+            self.trades.append({"price": current_price, "amount": amount_to_buy, "exited": False})
+            self.balance -= self.stake_amount
+            self.total_trades += 1
 
     def run(self):
         balance = self.starting_balance
@@ -26,12 +38,7 @@ class BackTester:
         for _, row in self.dataframe.iterrows():
             # Entry Signal
             if row["signal"] == "enter_long":
-                if balance >= stake_amount:
-                    current_price = row["close"]
-                    amount_to_buy = stake_amount / current_price
-                    trades.append({"price": current_price, "amount": amount_to_buy, "exited": False})
-                    balance -= stake_amount
-                    total_trades += 1
+                self._enter_long(row)
             # Exit Signal
             if row["signal"] == "exit_long":
                 for trade in trades:
