@@ -15,7 +15,7 @@ class BackTester:
         self.wins = []
         self.losses = []
         self.total_trades = 0
-        self.last_price = None
+        self.last_row = None
 
     def _enter_long(self, row: pd.Series):
         if self.balance >= self.stake_amount:
@@ -25,28 +25,22 @@ class BackTester:
             self.balance -= self.stake_amount
             self.total_trades += 1
 
-    def _exit_long(self, row: pd.Series):
+    def _exit_trade(self, current_row: pd.Series, trade: dict):
+        if trade["exited"]:
+            return
+        position_value = trade["amount"] * current_row["close"]
+        if position_value < self.stake_amount:
+            self.losses.append(self.stake_amount - position_value)
+        if position_value > self.stake_amount:
+            self.wins.append(position_value - self.stake_amount)
+        self.balance += position_value
+        trade["exited"] = True
+
+    def _exit_trades(self, current_row: pd.Series):
         for trade in self.trades:
-            if trade["exited"]:
-                continue
-            position_value = trade["amount"] * row["close"]
-            if position_value < self.stake_amount:
-                self.losses.append(self.stake_amount - position_value)
-            if position_value > self.stake_amount:
-                self.wins.append(position_value - self.stake_amount)
-            self.balance += position_value
-            trade["exited"] = True
+            self._exit_trade(current_row, trade)
 
     def run(self):
-        balance = self.starting_balance
-        stake_amount = self.stake_amount
-        stop_loss = self.stop_loss
-        take_profit = self.take_profit
-        trades = []
-        losses = []
-        wins = []
-        last_price = None
-        total_trades = 0
         # Loop through every row and execute trade
         for _, row in self.dataframe.iterrows():
             # Entry Signal
@@ -54,7 +48,7 @@ class BackTester:
                 self._enter_long(row)
             # Exit Signal
             if row["signal"] == "exit_long":
-                self._exit_long(row)
+                self._exit_trades(row)
 
             # Check for Stop Loss and Tp Hits
             for trade in trades:
@@ -77,18 +71,10 @@ class BackTester:
                         wins.append(gain)
                         balance += position_value
                         trade["exited"] = True
-            self.last_price = row["close"]
+            self.last_row = row["close"]
 
         # Liquidate Existing Trades and Update The Balance
-        for trade in trades:
-            if trade["exited"]:
-                continue
-            position_value = trade["amount"] * last_price
-            if position_value < stake_amount:
-                losses.append(stake_amount - position_value)
-            elif position_value > stake_amount:
-                wins.append(position_value - stake_amount)
-            balance += position_value
+        self._exit_trades(self.last_row)
         win_percentage = len(wins) / total_trades * 100
         loss_percentage = len(losses) / total_trades * 100
         win_loss_ratio = len(wins) / len(losses)
