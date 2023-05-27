@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Optional
+from typing import Optional, Dict
 
 
 class BackTester:
@@ -30,7 +30,7 @@ class BackTester:
             self.balance -= self.stake_amount
             self.total_trades += 1
 
-    def _exit_trade(self, current_row: pd.Series, trade: dict, is_sl_tp: bool = False):
+    def _exit_trade(self, current_row: pd.Series, trade: Dict, is_sl_tp: bool = False):
         """
         Exits Single Trade
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
@@ -74,6 +74,27 @@ class BackTester:
         for trade in self.trades:
             self._exit_trade(current_row, trade, is_sl_tp)
 
+    def _calculate_metrics(self) -> Dict:
+        no_of_wins = len(self.wins)
+        no_of_loss = len(self.losses)
+        win_total = sum(self.wins)
+        loss_total = sum(self.losses)
+        win_percentage = no_of_wins / self.total_trades * 100
+        loss_percentage = no_of_loss / self.total_trades * 100
+        win_loss_ratio = no_of_wins / no_of_loss
+        metrics = {
+            "wins": no_of_wins,
+            "losses": no_of_loss,
+            "win_amount": win_total,
+            "loss_amount": loss_total,
+            "win_%": win_percentage,
+            "loss_%": loss_percentage,
+            "w/l_ratio": win_loss_ratio,
+            "total_trades": self.total_trades,
+            "final_balance": self.balance
+        }
+        return metrics
+
     def run(self):
         # Loop through every row and execute trade
         for _, row in self.dataframe.iterrows():
@@ -90,18 +111,5 @@ class BackTester:
 
         # Liquidate Existing Trades and Update The Balance
         self._exit_trades(self.last_row)
-        win_percentage = len(self.wins) / total_trades * 100
-        loss_percentage = len(losses) / total_trades * 100
-        win_loss_ratio = len(wins) / len(losses)
-        metrics = {
-            "wins": len(wins),
-            "losses": len(losses),
-            "win_amount": sum(wins),
-            "loss_amount": sum(losses),
-            "win_%": win_percentage,
-            "loss_%": loss_percentage,
-            "w/l_ratio": win_loss_ratio,
-            "total_trades": total_trades,
-            "final_balance": balance
-        }
+        metrics = self._calculate_metrics()
         return metrics
