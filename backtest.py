@@ -15,6 +15,7 @@ class BackTester:
         self.wins = []
         self.losses = []
         self.total_trades = 0
+        self.last_price = None
 
     def _enter_long(self, row: pd.Series):
         if self.balance >= self.stake_amount:
@@ -23,6 +24,18 @@ class BackTester:
             self.trades.append({"price": current_price, "amount": amount_to_buy, "exited": False})
             self.balance -= self.stake_amount
             self.total_trades += 1
+
+    def _exit_long(self, row: pd.Series):
+        for trade in self.trades:
+            if trade["exited"]:
+                continue
+            position_value = trade["amount"] * row["close"]
+            if position_value < self.stake_amount:
+                self.losses.append(self.stake_amount - position_value)
+            if position_value > self.stake_amount:
+                self.wins.append(position_value - self.stake_amount)
+            self.balance += position_value
+            trade["exited"] = True
 
     def run(self):
         balance = self.starting_balance
@@ -41,16 +54,7 @@ class BackTester:
                 self._enter_long(row)
             # Exit Signal
             if row["signal"] == "exit_long":
-                for trade in trades:
-                    if trade["exited"]:
-                        continue
-                    position_value = trade["amount"] * row["close"]
-                    if position_value < stake_amount:
-                        losses.append(stake_amount - position_value)
-                    if position_value > stake_amount:
-                        wins.append(position_value - stake_amount)
-                    balance += position_value
-                    trade["exited"] = True
+                self._exit_long(row)
 
             # Check for Stop Loss and Tp Hits
             for trade in trades:
@@ -73,7 +77,7 @@ class BackTester:
                         wins.append(gain)
                         balance += position_value
                         trade["exited"] = True
-            last_price = row["close"]
+            self.last_price = row["close"]
 
         # Liquidate Existing Trades and Update The Balance
         for trade in trades:
