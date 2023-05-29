@@ -3,9 +3,11 @@ from typing import Optional, Dict
 
 
 class BackTester:
-    def __init__(self, df: pd.DataFrame,
-                 starting_balance: int, stake_amount: int,
-                 stop_loss: Optional[int], take_profit: Optional[int]):
+    def __init__(
+        self, df: pd.DataFrame,
+        starting_balance: int, stake_amount: int,
+        stop_loss: Optional[int], take_profit: Optional[int]
+    ):
         self.dataframe = df
         self.balance = starting_balance
         self.stake_amount = stake_amount
@@ -30,7 +32,7 @@ class BackTester:
             self.balance -= self.stake_amount
             self.total_trades += 1
 
-    def _exit_trade(self, current_row: pd.Series, trade: Dict, is_sl_tp: bool = False):
+    def _exit_trade(self, current_row: pd.Series, trade: Dict, is_sl_tp: bool = False, force_exit: bool = False):
         """
         Exits Single Trade
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
@@ -51,7 +53,7 @@ class BackTester:
                     self.losses.append(self.stake_amount - position_value)
                 else:
                     return
-        if position_value > self.stake_amount:
+        elif position_value > self.stake_amount:
             if not is_sl_tp:
                 self.wins.append(position_value - self.stake_amount)
             else:
@@ -61,10 +63,13 @@ class BackTester:
                     self.wins.append(position_value - self.stake_amount)
                 else:
                     return
+        else:
+            if not force_exit:
+                return
         self.balance += position_value
         trade["exited"] = True
 
-    def _exit_trades(self, current_row: pd.Series, is_sl_tp: bool = False):
+    def _exit_trades(self, current_row: pd.Series, is_sl_tp: bool = False, force_exit: bool = False):
         """
         Exits All trades
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
@@ -72,7 +77,7 @@ class BackTester:
         :return:
         """
         for trade in self.trades:
-            self._exit_trade(current_row, trade, is_sl_tp)
+            self._exit_trade(current_row, trade, is_sl_tp, force_exit)
 
     def _calculate_metrics(self) -> Dict:
         no_of_wins = len(self.wins)
@@ -104,12 +109,11 @@ class BackTester:
             # Exit Signal
             if row["signal"] == "exit_long":
                 self._exit_trades(row)
-
             # Check for Stop Loss and Tp Hits
             self._exit_trades(row, True)
-            self.last_row = row["close"]
+            self.last_row = row
 
         # Liquidate Existing Trades and Update The Balance
-        self._exit_trades(self.last_row)
+        self._exit_trades(self.last_row, force_exit=True)
         metrics = self._calculate_metrics()
         return metrics
