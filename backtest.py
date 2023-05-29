@@ -38,11 +38,13 @@ class BackTester:
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
         :param trade: The trade to be exited. Contains `amount` bought and the buying `price`.
         :param is_sl_tp: Tells the backtester to only exit trades where stop_loss or take_profit has been hit.
+        :param force_exit: Force exits the trade when set to True.
         :return: None
         """
         if trade["exited"]:
             return
         position_value = trade["amount"] * current_row["close"]
+        # Loosing position
         if position_value < self.stake_amount:
             if not is_sl_tp:
                 self.losses.append(self.stake_amount - position_value)
@@ -53,6 +55,7 @@ class BackTester:
                     self.losses.append(self.stake_amount - position_value)
                 else:
                     return
+        # Gaining Position
         elif position_value > self.stake_amount:
             if not is_sl_tp:
                 self.wins.append(position_value - self.stake_amount)
@@ -63,7 +66,9 @@ class BackTester:
                     self.wins.append(position_value - self.stake_amount)
                 else:
                     return
+        # No change
         else:
+            # Exit the function if the trade is not to be exited forcefully
             if not force_exit:
                 return
         self.balance += position_value
@@ -74,6 +79,7 @@ class BackTester:
         Exits All trades
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
         :param is_sl_tp: Tells the backtester to only exit trades where stop_loss or take_profit has been hit.
+        :param force_exit: Force exits trades when set to True.
         :return:
         """
         for trade in self.trades:
