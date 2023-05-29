@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Optional, Dict
+from tabulate import tabulate
 
 
 class BackTester:
@@ -112,18 +113,18 @@ class BackTester:
         loss_percentage = no_of_loss / self.total_trades * 100
         win_loss_ratio = no_of_wins / no_of_loss
         metrics = {
-            "wins": no_of_wins,
-            "losses": no_of_loss,
-            "win_amount": win_total,
-            "loss_amount": loss_total,
-            "sl_hits": self.sl_hits,
-            "tp_hits": self.tp_hits,
-            "force_exits": self.force_exits,
-            "win_%": win_percentage,
-            "loss_%": loss_percentage,
-            "w/l_ratio": win_loss_ratio,
-            "total_trades": self.total_trades,
-            "final_balance": self.balance
+            "wins": [no_of_wins],
+            "losses": [no_of_loss],
+            "win_amount": [win_total],
+            "loss_amount": [loss_total],
+            "sl_hits": [self.sl_hits],
+            "tp_hits": [self.tp_hits],
+            "force_exits": [self.force_exits],
+            "win_%": [win_percentage],
+            "loss_%": [loss_percentage],
+            "w/l_ratio": [win_loss_ratio],
+            "total_trades": [self.total_trades],
+            "final_balance": [self.balance]
         }
         return metrics
 
@@ -144,4 +145,5 @@ class BackTester:
         # Liquidate Existing Trades and Update The Balance
         self._exit_trades(self.last_row, force_exit=True)
         metrics = self._calculate_metrics()
-        return metrics
+        print("\t\t\t\t\t\t------------------ BACKTEST RESULTS ----------------")
+        print(tabulate(metrics, headers="keys", tablefmt="fancy_grid"))
