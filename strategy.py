@@ -3,10 +3,10 @@ from typing import Optional
 
 import pandas as pd
 import pandas_ta as ta
+import numpy as np
 
 
 class BaseStrategy(metaclass=ABCMeta):
-
     # Minimum number of candles required for the strategy to generate a valid signal
     start_up_candle_count: int = 1
     # Timeframe for the strategy
@@ -53,7 +53,16 @@ class KNNStrategy(BaseAIStrategy):
     short_window = 14
 
     def feature_engineering(self, data_frame: pd.DataFrame):
-        return data_frame
+        data_frame["feature_1"] = data_frame[["vf", "rf", "cf", "of"]].mean(axis=1)
+        data_frame["feature_2"] = data_frame[["vs", "rs", "cs", "os"]].mean(axis=1)
+
+        final_df = data_frame[["feature_1", "feature_2", "open", "close"]][
+            self.start_up_candle_count :
+        ].reset_index(drop=True)
+        final_df["label"] = np.where(
+            final_df["close"].shift(1) > final_df["close"], -1, 1
+        )
+        return final_df
 
     def populate_indicators(self, data_frame: pd.DataFrame):
         data_frame["v_max_rolling_long"] = (
