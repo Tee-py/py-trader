@@ -1,19 +1,20 @@
 import pandas as pd
-from typing import Optional, Dict
+from typing import Union, Dict
 from tabulate import tabulate
+from strategy import BaseStrategy, BaseAIStrategy
 
 
 class BackTester:
     def __init__(
-        self, df: pd.DataFrame,
-        starting_balance: int, stake_amount: int,
-        stop_loss: Optional[float], take_profit: Optional[float]
+        self,
+        strategy: Union[BaseStrategy, BaseAIStrategy],
+        starting_balance: int
     ):
-        self.dataframe = df
+        self.strategy = strategy
         self.balance = starting_balance
-        self.stake_amount = stake_amount
-        self.stop_loss = stop_loss
-        self.take_profit = take_profit
+        self.stake_amount = strategy.stake_amount
+        self.stop_loss = strategy.stop_loss
+        self.take_profit = strategy.take_profit
         self.trades = []
         self.last_action = None
         self.wins = []
@@ -23,6 +24,10 @@ class BackTester:
         self.force_exits = 0
         self.total_trades = 0
         self.last_row = None
+
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        return pd.read_csv("data/eth-usdt-3m.csv")
 
     def _enter_long(self, row: pd.Series):
         """
@@ -128,9 +133,9 @@ class BackTester:
         }
         return metrics
 
-    def run(self):
+    def backtest(self, data_frame: pd.DataFrame):
         # Loop through every row and execute trade
-        for _, row in self.dataframe.iterrows():
+        for _, row in data_frame.iterrows():
             # Entry Signal
             if row["signal"] == "enter_long":
                 if self.last_action != "enter_long":
@@ -147,3 +152,13 @@ class BackTester:
         metrics = self._calculate_metrics()
         print("\t\t\t\t\t\t------------------ BACKTEST RESULTS ----------------")
         print(tabulate(metrics, headers="keys", tablefmt="fancy_grid"))
+
+    def run(self):
+        data_frame = self.strategy.populate_indicators(self.dataframe)
+        if self.strategy.ai_enabled:
+            data_frame = self.strategy.populate_features(data_frame)
+            data_frame = self.strategy.populate_predictions(data_frame)
+        data_frame = self.strategy.populate_entry_signal(data_frame)
+        data_frame = self.strategy.populate_exit_signal(data_frame)
+
+        self.backtest(data_frame)
