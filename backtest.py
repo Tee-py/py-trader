@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Union, Dict
 from tabulate import tabulate
-from strategy import BaseStrategy, BaseAIStrategy
+from strategies import BaseStrategy, BaseAIStrategy
 
 
 class BackTester:

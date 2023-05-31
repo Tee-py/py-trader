@@ -10,7 +10,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
 import joblib
 from backtest import BackTester
-from strategy import KNNStrategy
+from strategies import KNNStrategy
 
 LONG_WINDOW = 28
 SHORT_WINDOW = 14
