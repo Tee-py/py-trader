@@ -36,6 +36,8 @@ class BaseStrategy(metaclass=ABCMeta):
 
 
 class BaseAIStrategy(BaseStrategy):
+    model_file: Optional[str] = None
+
     @abstractmethod
     def feature_engineering(self, data_frame: pd.DataFrame):
         raise NotImplementedError
@@ -43,6 +45,7 @@ class BaseAIStrategy(BaseStrategy):
 
 class KNNStrategy(BaseAIStrategy):
     start_up_candle_count = 28
+    model_file = "knn_model.pkl"
     time_frame = "3m"
     asset = "ETH/USDT"
     stop_loss = 0.0002
@@ -57,7 +60,7 @@ class KNNStrategy(BaseAIStrategy):
         data_frame["feature_2"] = data_frame[["vs", "rs", "cs", "os"]].mean(axis=1)
 
         final_df = data_frame[["feature_1", "feature_2", "open", "close"]][
-            self.start_up_candle_count :
+            self.start_up_candle_count:
         ].reset_index(drop=True)
         final_df["label"] = np.where(
             final_df["close"].shift(1) > final_df["close"], -1, 1
