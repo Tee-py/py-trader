@@ -4,6 +4,7 @@ from typing import Optional
 import pandas as pd
 import pandas_ta as ta
 import numpy as np
+import joblib
 
 
 class BaseStrategy(metaclass=ABCMeta):
@@ -42,6 +43,14 @@ class BaseAIStrategy(BaseStrategy):
     def feature_engineering(self, data_frame: pd.DataFrame):
         raise NotImplementedError
 
+    @abstractmethod
+    def populate_predictions(self, data_frame: pd.DataFrame):
+        raise NotImplementedError
+
+    @property
+    def model(self):
+        return joblib.load(self.model_file)
+
 
 class KNNStrategy(BaseAIStrategy):
     start_up_candle_count = 28
@@ -66,6 +75,11 @@ class KNNStrategy(BaseAIStrategy):
             final_df["close"].shift(1) > final_df["close"], -1, 1
         )
         return final_df
+
+    def populate_predictions(self, data_frame: pd.DataFrame):
+        predictions = self.model.predict(data_frame[["feature_1", "feature_2"]])
+        data_frame["predicted"] = predictions
+        return data_frame
 
     def populate_indicators(self, data_frame: pd.DataFrame):
         data_frame["v_max_rolling_long"] = (
@@ -109,7 +123,9 @@ class KNNStrategy(BaseAIStrategy):
         return data_frame
 
     def populate_entry_signal(self, data_frame: pd.DataFrame):
+        data_frame.loc[data_frame["predicted"] == 1, "signal"] = "enter_long"
         return data_frame
 
     def populate_exit_signal(self, data_frame: pd.DataFrame):
+        data_frame.loc[data_frame["predicted"] == -1, "signal"] = "exit_long"
         return data_frame
