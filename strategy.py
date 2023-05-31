@@ -30,3 +30,13 @@ class BaseStrategy(metaclass=ABCMeta):
     @abstractmethod
     def populate_exit_signal(self, data_frame: pd.DataFrame):
         raise NotImplementedError
+
+
+class BaseAIStrategy(BaseStrategy):
+
+    @abstractmethod
+    def feature_engineering(self, data_frame: pd.DataFrame):
+        raise NotImplementedError
+
+
+
