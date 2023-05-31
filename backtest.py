@@ -27,7 +27,8 @@ class BackTester:
 
     @property
     def dataframe(self) -> pd.DataFrame:
-        return pd.read_csv("data/eth-usdt-3m.csv")
+        base, quote = tuple(self.strategy.asset.split("/"))
+        return pd.read_csv(f"data/{base}-{quote}-{self.strategy.time_frame}.csv")
 
     def _enter_long(self, row: pd.Series):
         """

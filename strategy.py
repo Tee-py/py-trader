@@ -22,6 +22,8 @@ class BaseStrategy(metaclass=ABCMeta):
     stake_amount: int = 100
     # Allows the bot to execute short trades
     can_short: bool = False
+    # For AI Strategies
+    ai_enabled: bool = False
 
     @abstractmethod
     def populate_indicators(self, data_frame: pd.DataFrame):
@@ -37,10 +39,11 @@ class BaseStrategy(metaclass=ABCMeta):
 
 
 class BaseAIStrategy(BaseStrategy):
+    ai_enabled = True
     model_file: Optional[str] = None
 
     @abstractmethod
-    def feature_engineering(self, data_frame: pd.DataFrame):
+    def populate_features(self, data_frame: pd.DataFrame):
         raise NotImplementedError
 
     @abstractmethod
@@ -64,7 +67,7 @@ class KNNStrategy(BaseAIStrategy):
     long_window = 28
     short_window = 14
 
-    def feature_engineering(self, data_frame: pd.DataFrame):
+    def populate_features(self, data_frame: pd.DataFrame):
         data_frame["feature_1"] = data_frame[["vf", "rf", "cf", "of"]].mean(axis=1)
         data_frame["feature_2"] = data_frame[["vs", "rs", "cs", "os"]].mean(axis=1)
 
