@@ -50,4 +50,4 @@ class BaseAIStrategy(BaseStrategy):
 
     @property
     def model(self):
-        return joblib.load(self.model_file)
+        return joblib.load(f"ai/model_store/{self.model_file}")
