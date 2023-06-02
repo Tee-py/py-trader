@@ -1,16 +1,28 @@
 import pandas as pd
+import datetime
 from typing import Union, Dict
 from tabulate import tabulate
 from strategies import BaseStrategy, BaseAIStrategy
+from data import BinanceDataHandler
 
 
 class BackTester:
     def __init__(
         self,
         strategy: Union[BaseStrategy, BaseAIStrategy],
-        starting_balance: int
+        data_handler: BinanceDataHandler,
+        starting_balance: int,
+        from_dt: str,
+        to_dt: str
     ):
         self.strategy = strategy
+        self.data_handler = data_handler
+        self.start_at = int(
+            datetime.datetime.strptime(from_dt, "%Y/%m/%d-%H:%M").timestamp()
+        )
+        self.end_at = int(
+            datetime.datetime.strptime(to_dt, "%Y/%m/%d-%H:%M").timestamp()
+        )
         self.balance = starting_balance
         self.stake_amount = strategy.stake_amount
         self.stop_loss = strategy.stop_loss
@@ -28,7 +40,7 @@ class BackTester:
     @property
     def dataframe(self) -> pd.DataFrame:
         base, quote = tuple(self.strategy.asset.split("/"))
-        return pd.read_csv(f"data/{base}-{quote}-{self.strategy.time_frame}.csv")
+        return self.data_handler.load_market_data(f"{base}{quote}", self.strategy.time_frame, self.start_at, self.end_at)
 
     def _enter_long(self, row: pd.Series):
         """
@@ -136,7 +148,7 @@ class BackTester:
 
     def backtest(self, data_frame: pd.DataFrame):
         # Loop through every row and execute trade
-        for _, row in data_frame.iterrows():
+        for index, row in data_frame.iterrows():
             # Entry Signal
             if row["signal"] == "enter_long":
                 if self.last_action != "enter_long":

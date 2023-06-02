@@ -84,8 +84,9 @@ class BinanceDataHandler:
     def dump_market_data(self, symbol: str, interval: str, from_dt: str, to_dt: Optional[str] = None):
         asyncio.run(self.dump_ohlcv(symbol, interval, from_dt, to_dt))
 
-    def load_market_data(self, symbol: str, interval: str):  # noqa
-        return pd.read_csv(f"data/{symbol.lower()}-{interval}.csv")
+    def load_market_data(self, symbol: str, interval: str, start: int, end: int):  # noqa
+        df = pd.read_csv(f"data/{symbol.lower()}-{interval}.csv")
+        return df.query('timestamp >= @start and timestamp <= @end')
 
 
 if __name__ == "__main__":
