@@ -15,6 +15,7 @@ class BaseStrategyModelTrainer(metaclass=ABCMeta):
         return pd.read_csv(f"data/{asset}-{interval}.csv")
 
     def populate_features(self, dataframe) -> pd.DataFrame:
+        dataframe = self.strategy.populate_indicators(dataframe)
         return self.strategy.populate_features(dataframe)
 
     @abstractmethod

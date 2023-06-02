@@ -1,1 +1,2 @@
-from base import BaseStrategyModelTrainer
+from .base import BaseStrategyModelTrainer
+from .knn import KNNStrategyModelTrainer

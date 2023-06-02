@@ -3,6 +3,7 @@ from data import BinanceDataHandler
 
 from backtest import BackTester
 from strategies import KNNStrategy
+from ai.model_trainers import KNNStrategyModelTrainer
 
 
 if __name__ == "__main__":
@@ -17,6 +18,14 @@ if __name__ == "__main__":
         symbol, interval, from_dt, to_dt = args[2], args[3], args[4], args[5]
         print(f"Fetching data for {symbol} from {from_dt} to {to_dt} with timeframe {interval}")
         handler.dump_market_data(symbol, interval, from_dt, to_dt)
+    elif args[1] == "train":
+        '''
+        Description: Train AI Models and save in pickle file.
+        Command: `python main.py train`
+        '''
+        strategy = KNNStrategy()
+        trainer = KNNStrategyModelTrainer(strategy)
+        trainer.train()
     elif args[1] == "backtest":
         from_dt, to_dt = args[2], args[3]
         strategy = KNNStrategy()

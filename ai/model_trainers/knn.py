@@ -1,6 +1,5 @@
 import joblib
-import pandas as pd
-from base import BaseStrategyModelTrainer
+from .base import BaseStrategyModelTrainer
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
