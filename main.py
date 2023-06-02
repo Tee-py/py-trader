@@ -16,14 +16,14 @@ LONG_WINDOW = 28
 SHORT_WINDOW = 14
 
 
-def dump_ohlcv(symbol: str, tf: str):
-    since = int((datetime.datetime.now() - datetime.timedelta(hours=50)).timestamp() * 1000)
-    binance = ccxt.binance()
-    result = binance.fetch_ohlcv(symbol, tf, since=since, limit=1000)
-    pd.DataFrame(
-        result,
-        columns=["timestamp", "open", "high", "low", "close", "volume"]
-    ).to_csv(f"data/eth-usdt-{tf}.csv")
+# def dump_ohlcv(symbol: str, tf: str):
+#     since = int((datetime.datetime.now() - datetime.timedelta(hours=50)).timestamp() * 1000)
+#     binance = ccxt.binance()
+#     result = binance.fetch_ohlcv(symbol, tf, since=since, limit=1000)
+#     pd.DataFrame(
+#         result,
+#         columns=["timestamp", "open", "high", "low", "close", "volume"]
+#     ).to_csv(f"data/eth-usdt-{tf}.csv")
 
 
 def feature_engineering(df: pd.DataFrame):
