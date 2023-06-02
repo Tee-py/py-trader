@@ -1,6 +1,8 @@
-from strategies import BaseAIStrategy
 from abc import ABCMeta, abstractmethod
+
 import pandas as pd
+
+from strategies import BaseAIStrategy
 
 
 class BaseStrategyModelTrainer(metaclass=ABCMeta):

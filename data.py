@@ -87,8 +87,3 @@ class BinanceDataHandler:
     def load_market_data(self, symbol: str, interval: str, start: int, end: int):  # noqa
         df = pd.read_csv(f"data/{symbol.lower()}-{interval}.csv")
         return df.query('timestamp >= @start and timestamp <= @end')
-
-
-if __name__ == "__main__":
-    handler = BinanceDataHandler()
-    handler.dump_market_data("ETHUSDT", "30m", "2022/1/1-00:00", "2023/6/2-00:00")
