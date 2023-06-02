@@ -1,0 +1,3 @@
+
+class KNNModel:
+    pass
