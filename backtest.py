@@ -13,7 +13,7 @@ class BackTester:
         data_handler: BinanceDataHandler,
         starting_balance: int,
         from_dt: str,
-        to_dt: str
+        to_dt: str,
     ):
         self.strategy = strategy
         self.data_handler = data_handler
@@ -40,7 +40,9 @@ class BackTester:
     @property
     def dataframe(self) -> pd.DataFrame:
         base, quote = tuple(self.strategy.asset.split("/"))
-        return self.data_handler.load_market_data(f"{base}{quote}", self.strategy.time_frame, self.start_at, self.end_at)
+        return self.data_handler.load_market_data(
+            f"{base}{quote}", self.strategy.time_frame, self.start_at, self.end_at
+        )
 
     def _enter_long(self, row: pd.Series):
         """
@@ -51,12 +53,20 @@ class BackTester:
         if self.balance >= self.stake_amount:
             current_price = row["close"]
             amount_to_buy = self.stake_amount / current_price
-            self.trades.append({"price": current_price, "amount": amount_to_buy, "exited": False})
+            self.trades.append(
+                {"price": current_price, "amount": amount_to_buy, "exited": False}
+            )
             self.balance -= self.stake_amount
             self.total_trades += 1
             self.last_action = "enter_long"
 
-    def _exit_trade(self, current_row: pd.Series, trade: Dict, is_sl_tp: bool = False, force_exit: bool = False):
+    def _exit_trade(
+        self,
+        current_row: pd.Series,
+        trade: Dict,
+        is_sl_tp: bool = False,
+        force_exit: bool = False,
+    ):
         """
         Exits Single Trade
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
@@ -111,7 +121,9 @@ class BackTester:
         trade["exited"] = True
         self.last_action = "exit_trade"
 
-    def _exit_trades(self, current_row: pd.Series, is_sl_tp: bool = False, force_exit: bool = False):
+    def _exit_trades(
+        self, current_row: pd.Series, is_sl_tp: bool = False, force_exit: bool = False
+    ):
         """
         Exits All trades
         :param current_row: Pandas row where the exit signal was generated. Must contain `close` column.
@@ -142,7 +154,7 @@ class BackTester:
             "loss_%": [loss_percentage],
             "w/l_ratio": [win_loss_ratio],
             "total_trades": [self.total_trades],
-            "final_balance": [self.balance]
+            "final_balance": [self.balance],
         }
         return metrics
 
@@ -156,6 +168,7 @@ class BackTester:
             # Exit Signal
             if row["signal"] == "exit_long":
                 self._exit_trades(row, force_exit=True)
+
             # Check for Stop Loss and Tp Hits
             self._exit_trades(row, True)
             self.last_row = row

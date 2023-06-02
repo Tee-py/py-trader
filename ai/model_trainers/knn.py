@@ -25,4 +25,4 @@ class KNNStrategyModelTrainer(BaseStrategyModelTrainer):
         # Print classification report for KNN
         print("KNN: \n", classification_report(y_test, y_pred_knn))
         # Save Models
-        joblib.dump(knn, "knn_model.pkl")
+        joblib.dump(knn, "ai/model_store/knn_model.pkl")
