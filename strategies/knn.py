@@ -82,3 +82,37 @@ class KNNStrategy(BaseAIStrategy):
     def populate_exit_signal(self, data_frame: pd.DataFrame):
         data_frame.loc[data_frame["predicted"] == -1, "signal"] = "exit_long"
         return data_frame
+
+
+class KNNEMARibbonStrategy(KNNStrategy):
+    # Attributes for EMA Indicator
+    ema_1_length = 8
+    ema_2_length = 13
+    ema_3_length = 20
+
+    def populate_indicators(self, data_frame: pd.DataFrame):
+        df = super().populate_indicators(data_frame)
+        # Add EMA Ribbon Indicators
+        df["ema_1"] = ta.ema(df["close"], self.ema_1_length)
+        df["ema_2"] = ta.ema(df["close"], self.ema_2_length)
+        df["ema_3"] = ta.ema(df["close"], self.ema_3_length)
+        return df
+
+    def populate_entry_signal(self, data_frame: pd.DataFrame):
+        data_frame.loc[
+            (data_frame["predicted"] == 1)
+            & (data_frame["ema_1"].diff() > 0)
+            & (data_frame["ema_2"].diff() > 0)
+            & (data_frame["ema_3"].diff() > 0),
+            "signal",
+        ] = "enter_long"
+        return data_frame
+
+    def populate_exit_signal(self, data_frame: pd.DataFrame):
+        data_frame.loc[
+            (data_frame["ema_1"].diff() < 0)
+            & (data_frame["ema_2"].diff() < 0)
+            & (data_frame["ema_3"].diff() < 0),
+            "signal",
+        ] = "exit_long"
+        return data_frame
