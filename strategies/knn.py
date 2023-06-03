@@ -21,7 +21,7 @@ class KNNStrategy(BaseAIStrategy):
         data_frame["feature_1"] = data_frame[["vf", "rf", "cf", "of"]].mean(axis=1)
         data_frame["feature_2"] = data_frame[["vs", "rs", "cs", "os"]].mean(axis=1)
 
-        final_df = data_frame[["feature_1", "feature_2", "open", "close"]][
+        final_df = data_frame[
             self.start_up_candle_count :
         ].reset_index(drop=True)
         final_df["label"] = np.where(
@@ -86,9 +86,9 @@ class KNNStrategy(BaseAIStrategy):
 
 class KNNEMARibbonStrategy(KNNStrategy):
     # Attributes for EMA Indicator
-    ema_1_length = 8
-    ema_2_length = 13
-    ema_3_length = 20
+    ema_1_length = 15
+    ema_2_length = 20
+    ema_3_length = 25
 
     def populate_indicators(self, data_frame: pd.DataFrame):
         df = super().populate_indicators(data_frame)

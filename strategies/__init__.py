@@ -1,2 +1,2 @@
 from .base import BaseStrategy, BaseAIStrategy
-from .knn import KNNStrategy
+from .knn import KNNStrategy, KNNEMARibbonStrategy

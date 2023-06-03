@@ -9,3 +9,4 @@ class CommandType(Enum):
 
 class StrategyType(Enum):
     KNN = "knn"
+    KNN_EMA = "knn-ema"

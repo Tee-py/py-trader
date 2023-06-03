@@ -1,5 +1,5 @@
 from constants import CommandType, StrategyType
-from strategies import KNNStrategy
+from strategies import KNNStrategy, KNNEMARibbonStrategy
 from ai.model_trainers import KNNStrategyModelTrainer
 
 
@@ -17,6 +17,8 @@ def get_command_type(arg: str) -> CommandType:
 def get_strategy_type(arg: str) -> StrategyType:
     if arg == "knn":
         return StrategyType.KNN
+    if arg == "knn-ema":
+        return StrategyType.KNN_EMA
     else:
         raise ValueError("Invalid Strategy")
 
@@ -24,6 +26,8 @@ def get_strategy_type(arg: str) -> StrategyType:
 def get_strategy_class(strategy: StrategyType):
     if strategy == StrategyType.KNN:
         return KNNStrategy
+    elif strategy == StrategyType.KNN_EMA:
+        return KNNEMARibbonStrategy
     else:
         raise ValueError("Invalid Strategy Type")
 
