@@ -131,7 +131,8 @@ class BackTester:
         :param force_exit: Force exits trades when set to True.
         :return:
         """
-        for trade in self.trades:
+        trades_to_exit = [trade for trade in self.trades if not trade["exited"]]
+        for trade in trades_to_exit:
             self._exit_trade(current_row, trade, is_sl_tp, force_exit)
 
     def _calculate_metrics(self) -> Dict:
@@ -158,6 +159,11 @@ class BackTester:
         }
         return metrics
 
+    def _print_backtest_results(self):
+        metrics = self._calculate_metrics()
+        print("\t\t\t\t\t\t------------------ BACKTEST RESULTS ----------------")
+        print(tabulate(metrics, headers="keys", tablefmt="fancy_grid"))
+
     def backtest(self, data_frame: pd.DataFrame):
         # Loop through every row and execute trade
         for index, row in data_frame.iterrows():
@@ -166,18 +172,16 @@ class BackTester:
                 if self.last_action != "enter_long":
                     self._enter_long(row)
             # Exit Signal
-            if row["signal"] == "exit_long":
+            elif row["signal"] == "exit_long":
                 self._exit_trades(row, force_exit=True)
-
             # Check for Stop Loss and Tp Hits
-            self._exit_trades(row, True)
+            else:
+                self._exit_trades(row, True)
             self.last_row = row
 
         # Liquidate Existing Trades and Update The Balance
         self._exit_trades(self.last_row, force_exit=True)
-        metrics = self._calculate_metrics()
-        print("\t\t\t\t\t\t------------------ BACKTEST RESULTS ----------------")
-        print(tabulate(metrics, headers="keys", tablefmt="fancy_grid"))
+        self._print_backtest_results()
 
     def run(self):
         data_frame = self.strategy.populate_indicators(self.dataframe)
@@ -186,5 +190,4 @@ class BackTester:
             data_frame = self.strategy.populate_predictions(data_frame)
         data_frame = self.strategy.populate_entry_signal(data_frame)
         data_frame = self.strategy.populate_exit_signal(data_frame)
-
         self.backtest(data_frame)
