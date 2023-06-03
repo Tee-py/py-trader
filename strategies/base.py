@@ -35,6 +35,9 @@ class BaseStrategy(metaclass=ABCMeta):
     def populate_exit_signal(self, data_frame: pd.DataFrame):
         raise NotImplementedError
 
+    def display_plot(self, data_frame: pd.DataFrame):
+        raise NotImplementedError
+
 
 class BaseAIStrategy(BaseStrategy):
     ai_enabled = True

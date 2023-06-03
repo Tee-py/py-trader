@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 from .base import BaseAIStrategy
 
@@ -83,12 +85,16 @@ class KNNStrategy(BaseAIStrategy):
         data_frame.loc[data_frame["predicted"] == -1, "signal"] = "exit_long"
         return data_frame
 
+    def display_plot(self, data_frame: pd.DataFrame):
+        pass
+
 
 class KNNEMARibbonStrategy(KNNStrategy):
     # Attributes for EMA Indicator
-    ema_1_length = 15
+    ema_1_length = 10
     ema_2_length = 20
-    ema_3_length = 25
+    ema_3_length = 30
+    start_up_candle_count = 30
 
     def populate_indicators(self, data_frame: pd.DataFrame):
         df = super().populate_indicators(data_frame)
@@ -116,3 +122,28 @@ class KNNEMARibbonStrategy(KNNStrategy):
             "signal",
         ] = "exit_long"
         return data_frame
+
+    def display_plot(self, data_frame: pd.DataFrame):  # noqa
+        data_frame["time"] = pd.to_datetime(data_frame["timestamp"])
+
+        fig = go.Figure(
+            data=[
+                go.Candlestick(
+                    x=data_frame["time"],
+                    open=data_frame["open"],
+                    high=data_frame["high"],
+                    low=data_frame["low"],
+                    close=data_frame["close"]
+                )
+            ]
+        )
+        fig.show()
+        # plt.plot(data_frame["time"], data_frame["close"], label="Close Price")
+        # plt.plot(data_frame["time"], data_frame["ema_1"], label="EMA 1")
+        # plt.plot(data_frame["time"], data_frame["ema_2"], label="EMA 2")
+        # plt.plot(data_frame["time"], data_frame["ema_3"], label="EMA 3")
+        # plt.xlabel("Timestamp")
+        # plt.ylabel("Price")
+        # plt.title("KNN EMA Strategy Plot")
+        # plt.legend()
+        # plt.show()

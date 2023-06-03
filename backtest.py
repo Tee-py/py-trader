@@ -190,4 +190,5 @@ class BackTester:
             data_frame = self.strategy.populate_predictions(data_frame)
         data_frame = self.strategy.populate_entry_signal(data_frame)
         data_frame = self.strategy.populate_exit_signal(data_frame)
+        # self.strategy.display_plot(data_frame)
         self.backtest(data_frame)
