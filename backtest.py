@@ -175,8 +175,7 @@ class BackTester:
             elif row["signal"] == "exit_long":
                 self._exit_trades(row, force_exit=True)
             # Check for Stop Loss and Tp Hits
-            else:
-                self._exit_trades(row, True)
+            self._exit_trades(row, True)
             self.last_row = row
 
         # Liquidate Existing Trades and Update The Balance

@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pandas_ta as ta
-import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 
 from .base import BaseAIStrategy
@@ -89,36 +88,61 @@ class KNNStrategy(BaseAIStrategy):
         pass
 
 
-class KNNEMARibbonStrategy(KNNStrategy):
+class KNNEMARibbonStrategy(BaseAIStrategy):
+    start_up_candle_count = 30
+    model_file = "knn_ema_model.pkl"
+    time_frame = "3m"
+    asset = "ETH/USDT"
+    stop_loss = 0.02
+    take_profit = 0.05
+    stake_amount = 100
     # Attributes for EMA Indicator
     ema_1_length = 10
     ema_2_length = 20
     ema_3_length = 30
-    start_up_candle_count = 30
+
+    def populate_features(self, data_frame: pd.DataFrame):
+        final_df = data_frame[
+            self.start_up_candle_count :
+        ].reset_index(drop=True)
+        final_df["label"] = 0
+        final_df.loc[
+            (final_df["ema_1"] < final_df["ema_2"])
+            & (final_df["ema_2"] < final_df["ema_3"]),
+            "label"
+        ] = -1
+        final_df.loc[
+            (final_df["ema_1"] > final_df["ema_2"])
+            & (final_df["ema_2"] > final_df["ema_3"]),
+            "label"
+        ] = 1
+        return final_df
+
+    def populate_predictions(self, data_frame: pd.DataFrame):
+        predictions = self.model.predict(data_frame[["ema_1", "ema_2", "ema_3"]])
+        data_frame["predicted"] = predictions
+        return data_frame
 
     def populate_indicators(self, data_frame: pd.DataFrame):
-        df = super().populate_indicators(data_frame)
         # Add EMA Ribbon Indicators
-        df["ema_1"] = ta.ema(df["close"], self.ema_1_length)
-        df["ema_2"] = ta.ema(df["close"], self.ema_2_length)
-        df["ema_3"] = ta.ema(df["close"], self.ema_3_length)
-        return df
+        data_frame["ema_1"] = ta.ema(data_frame["close"], self.ema_1_length)
+        data_frame["ema_2"] = ta.ema(data_frame["close"], self.ema_2_length)
+        data_frame["ema_3"] = ta.ema(data_frame["close"], self.ema_3_length)
+        return data_frame
 
     def populate_entry_signal(self, data_frame: pd.DataFrame):
         data_frame.loc[
             (data_frame["predicted"] == 1)
-            & (data_frame["ema_1"].diff() > 0)
-            & (data_frame["ema_2"].diff() > 0)
-            & (data_frame["ema_3"].diff() > 0),
+            &(data_frame["ema_1"] > data_frame["ema_2"])
+            & (data_frame["ema_2"] > data_frame["ema_3"]),
             "signal",
         ] = "enter_long"
         return data_frame
 
     def populate_exit_signal(self, data_frame: pd.DataFrame):
         data_frame.loc[
-            (data_frame["ema_1"].diff() < 0)
-            & (data_frame["ema_2"].diff() < 0)
-            & (data_frame["ema_3"].diff() < 0),
+            (data_frame["ema_1"] < data_frame["ema_2"])
+            & (data_frame["ema_2"] < data_frame["ema_3"]),
             "signal",
         ] = "exit_long"
         return data_frame
@@ -138,12 +162,3 @@ class KNNEMARibbonStrategy(KNNStrategy):
             ]
         )
         fig.show()
-        # plt.plot(data_frame["time"], data_frame["close"], label="Close Price")
-        # plt.plot(data_frame["time"], data_frame["ema_1"], label="EMA 1")
-        # plt.plot(data_frame["time"], data_frame["ema_2"], label="EMA 2")
-        # plt.plot(data_frame["time"], data_frame["ema_3"], label="EMA 3")
-        # plt.xlabel("Timestamp")
-        # plt.ylabel("Price")
-        # plt.title("KNN EMA Strategy Plot")
-        # plt.legend()
-        # plt.show()
